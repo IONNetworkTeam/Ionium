@@ -55,7 +55,7 @@ dependencies {
     "remapperImplementation"("net.fabricmc:tiny-remapper:0.10.2")
 }
 
-val modVersion = rootProject.version.toString()
+val modVersion = (findProperty("ionium_version") ?: rootProject.version).toString()
 val ornitheJar = project(":ornithe:1.8.9").tasks.named<Jar>("shadowRemapJar")
 
 val minecraftClientJar = layout.buildDirectory.file("minecraft/client-1.8.9.jar")
@@ -135,7 +135,7 @@ val forgeJar = tasks.register<Jar>("forgeJar") {
 
 tasks.register<Copy>("packageJar") {
     from(forgeJar.flatMap { it.archiveFile })
-    into(rootProject.layout.buildDirectory.dir("libs/$modVersion"))
+    into(rootProject.layout.buildDirectory.dir("libs/ionium"))
 }
 
 tasks.named<Jar>("jar") {
