@@ -158,6 +158,12 @@ createStonecutterProject("ornithe", listOf("1.2.5", "1.0.0-beta.7.3", "1.0.0-bet
     versions(versions)
 }
 
+// Ionium: Forge 1.8.9 build, made from the Ornithe 1.8.9 jar by remapping it to SRG names.
+if (file("forge189").exists() && isVersionIncluded("1.8.9") && (subprojectFilter == null || subprojectFilter("ornithe"))) {
+    include("forge189")
+    includedProjectCount++
+}
+
 data class CeleritasTarget(val friendlyName: String, val loaders: List<String>, val semanticName: String = friendlyName)
 
 createStonecutterProject("modern", listOf(

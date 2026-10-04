@@ -17,7 +17,7 @@ public class CeleritasDebugStrings {
         stringsToRender.add(Pair.of(getNativeMemoryString(), -1));
         stringsToRender.add(Pair.of("", -1));
 
-        stringsToRender.add(Pair.of("%s Renderer (%s)".formatted("Celeritas", Celeritas.VERSION), 0xFF55FF55));
+        stringsToRender.add(Pair.of("%s Renderer (%s)".formatted(Celeritas.NAME, Celeritas.VERSION), 0xFF55FF55));
         stringsToRender.add(Pair.of("", -1));
 
         var renderer = CeleritasWorldRenderer.instanceNullable();

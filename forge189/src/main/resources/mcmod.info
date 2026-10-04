@@ -1,0 +1,14 @@
+[
+  {
+    "modid": "ionium",
+    "name": "Ionium",
+    "description": "A fast, open-source chunk renderer for Minecraft 1.8.9 Forge. Based on Celeritas (embeddedt), itself a fork of Embeddium and of Sodium 0.5.11 and older. Not affiliated with CaffeineMC or the Celeritas project. Needs Java 21 and LWJGL3 (see the README).",
+    "version": "${version}",
+    "mcversion": "1.8.9",
+    "url": "https://github.com/IONNetworkTeam/Ionium",
+    "authorList": ["ION Network"],
+    "credits": "Celeritas by embeddedt; Embeddium; Sodium 0.5.11 and older by the CaffeineMC team; Iris 1.7. Licensed under LGPL-3.0.",
+    "logoFile": "/assets/ionium/icon.png",
+    "dependencies": []
+  }
+]
