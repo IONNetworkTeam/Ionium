@@ -1,85 +1,65 @@
-<img src="modern/src/main/resources/icon.png" width="128">
+<img src="branding/icon-512.png" width="128">
 
-# Celeritas
+# Ionium
 
-Celeritas is a free and open-source performance & shaders mod for Minecraft clients. It is a fork of Embeddium (which itself
-was based on the last FOSS-licensed version of Sodium) and Oculus 1.7.
+Ionium is Celeritas for Minecraft 1.8.9 Forge. [Celeritas](https://git.taumc.org/embeddedt/celeritas) is
+embeddedt's fork of Embeddium, which goes back to the last open-source Sodium (0.5.11). It already ran on 1.8.9
+through Ornithe, but nobody plays 1.8.9 on Ornithe, so we built a Forge version for the ION Network client.
 
-I maintain this mod for personal use & experimentation and make the source code available for other projects and
-developers who may be interested. There is also no guarantee of active maintenance, including bugfixes
-or ports to any newer Minecraft versions. That said, the code remains
-LGPL-3.0, so other projects under a compatible license (including Embeddium) should feel free to incorporate bugfixes
-and features they find useful. That said, expect minimal support, and many possible bugs due to limited testing.
+We're not connected to CaffeineMC or the Celeritas project. If something breaks, open an issue here and please
+don't bother them with it.
 
-**Important note:** There are currently no official Celeritas binary releases. If you download a precompiled
-Celeritas .jar file from any 3rd party source, we cannot provide any support for such files, and you do so at your own
-risk. As of writing, the only official distribution of Celeritas available is the original source code
-at https://git.taumc.org/embeddedt/celeritas, 
+## Is it any good?
 
-## Project layout
+It's early, but it works and renders the same as vanilla as far as we've seen. On our test machine (render
+distance 12, Forge on Java 21) it went from about 710 to 990 fps standing still and from 520 to 980 fps while
+turning the camera. Lots of mobs on screen barely changes anything, because Ionium only speeds up terrain.
 
-Celeritas uses the [Stonecutter](https://codeberg.org/stonecutter/stonecutter) toolchain to reduce the effort required
-to support individual Minecraft versions. Additionally, as much core rendering code as possible is fully abstracted
-from Minecraft within a `:common` project. The common module is published on
-[Maven](https://maven.taumc.org/#/releases/org/embeddedt/celeritas/celeritas-common), to allow downstream projects to
-consume it without rebuilding the entire project from source. However, the production mod jars are not available on Maven.
+The same renderer does about 2,200 fps on Ornithe, so something on the Forge side still eats time every frame.
+That's the next thing we're looking at. Right now OptiFine is still faster on Forge, and the two don't run
+together anyway.
 
-## How to build
+## What you need
 
-**`celeritas_target_versions` must be set when building locally, as no projects are configured by default.**
-You may want to set it in your user properties file (e.g. `~/.gradle/gradle.properties`) to avoid specifying
-it in every command-line Gradle invocation or modifying the checked-in `gradle.properties`.
+This won't run on a normal Forge 1.8.9 install. Like Celeritas on other old versions it needs Java 21 and LWJGL 3,
+so you need:
 
-The fastest way to build for exactly one version target is to run `./gradlew -Pceleritas_target_versions=<version> packageJar`.
-The resulting jar file will be available
-in `build/libs/<celeritas version>`.
+- Java 21
+- [RetroFuturaBootstrap](https://github.com/GTNewHorizons/RetroFuturaBootstrap) in place of LaunchWrapper; we use
+  [8to25](https://github.com/Oondanomala/8to25) for that
+- LWJGL 3 from the launcher, plus the LWJGL 2 compatibility layer that ships with
+  [ION Client](https://github.com/Juli0q/IONClientMod)
 
-Note: the `celeritas_target_versions` property accepts a standard Stonecutter predicate, so you can also use syntax like
-`./gradlew -Pceleritas_target_versions="<1.8.9"`.
+We'll put out a ready-made Prism Launcher instance that has all of this set up.
 
-Alternatively, `celeritas_target_versions_pattern` accepts a Java regex, e.g.
-`./gradlew -Pceleritas_target_versions_pattern=.* packageJar` to build every Minecraft version at once.
+## Building
 
-## How to use
+You need JDK 21.
 
-Celeritas generally requires a "modernized" environment on older Minecraft versions, and will not run out-of-the-box
-with a default modded Minecraft instance. Newer Minecraft versions ship with the necessary dependencies and will not
-require any custom setup.
+```sh
+./gradlew -Pceleritas_target_versions=1.8.9 :forge189:packageJar
+```
 
-* Forge 1.12.2 is supported out of the box on Java 8 + LWJGL 2.
-* Older versions of Minecraft require lwjgl3ify (or an equivalent) & Java 21. (This requirement will begin being relaxed in the near future.)
-* For modern (1.13+) versions, the final mod jar should run as-is in a standard instance for that version (e.g. Java 17
-or 21 are not required, unless the underlying Minecraft version itself requires them).
+The jar lands in `build/libs/<version>/`.
+
+There's no Forge-specific code here. The `forge189` project takes the Ornithe 1.8.9 jar, remaps it from Ornithe's
+Calamus names to Forge's SRG names (Mixin targets included, see `forge189/src/remapper`), bundles fastutil because
+1.8.9 doesn't ship it, and writes a Forge manifest.
+
+Changes compared to Celeritas:
+
+- the Forge build in `forge189/`
+- the mixin plugin and the entry point no longer need Fabric Loader. On Forge we skip two mixins: `MinecraftMixin`
+  only fixes Beta 1.7.3 windows, and `ChunkCacheMixin` tracks the server's chunks, which only matters before 1.3
+- F3 says "Ionium Renderer". Packages and the mod id are unchanged so we can keep merging from upstream
+  (remote `upstream`, https://git.taumc.org/embeddedt/celeritas)
+- our icon in `branding/`, drawn by `make_icon.py`
+
+The original README is still there as [README.celeritas.md](README.celeritas.md).
 
 ## License
 
-Celeritas is licensed under the Lesser GNU General Public License version 3, as it only uses code from Iris 1.7,
-Sodium 0.5.11-, and other FOSS projects.
-
-Portions of the option screen code are based on Reese's Sodium Options by FlashyReese, and are used under the terms of
-the [MIT license](https://opensource.org/license/mit), located in `src/main/resources/licenses/rso.txt`.
-
-This project does not include and has no plans to include any code from Sodium 0.6+ or 0.5.12+, as these versions of
-Sodium are not available under a free and open-source license.
-Please reach out to @embeddedt on Discord if you have concerns regarding the license of any code in this project.
-
-## Credits
-
-* The CaffeineMC team, for developing Sodium 0.5.11 & older, and making it open source
-* Asek3, for developing Rubidium, the original port of Sodium 0.5 to Forge
-* CelestialAbyss, for developing the Embeddium logo (which is reused here aside from recoloring), and input-Here for some very good visual touchups
-* Ven ([@basdxz](https://github.com/basdxz)), for help with translucency sorting, suggesting the general approach for async occlusion culling, and other suggestions during development
-* rdh, for leading several key improvements, including faster & better occlusion culling, better AO rendering, etc
-* douira, for researching and writing the [paper](https://douira.dev/assets/document/douira-master-thesis.pdf) on which the translucency sorting v3 implementation is based
-* grondag, for developing [bitraster](https://github.com/vram-guild/bitraster), the library we vendor for rasterized occlusion culling
-* XFactHD, Pepper, and anyone else I've forgotten to mention, for providing valuable code insights
-
-[![YourKit logo](https://www.yourkit.com/images/yklogo.png)](https://www.yourkit.com/)
-
-YourKit supports open source projects with innovative and intelligent tools
-for monitoring and profiling Java and .NET applications.
-YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
-<a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
-and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
-
-Special thanks to YourKit for providing a free license for my various open-source Minecraft projects.
+LGPL-3.0, same as Celeritas (`COPYING`, `COPYING.LESSER`). Thanks to embeddedt and everyone who worked on
+Celeritas, Embeddium, Sodium up to 0.5.11 (CaffeineMC), Iris 1.7, Reese's Sodium Options (MIT) and bitraster.
+The Forge jar also bundles fastutil (Apache-2.0) and JOML (MIT). Nothing here comes from Sodium 0.6 or later,
+which isn't open source.
