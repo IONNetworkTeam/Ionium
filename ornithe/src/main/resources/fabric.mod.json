@@ -9,7 +9,7 @@
   "contributors": ["JellySquid","IMS212"],
   "entrypoints": {
     "client": [
-      "org.taumc.celeritas.impl.Celeritas::onInitializeClient"
+      "org.taumc.celeritas.impl.fabric.CeleritasFabric::onInitializeClient"
     ]
   },
   "depends": {

@@ -1,14 +1,13 @@
 package org.taumc.celeritas.impl;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.loader.api.FabricLoader;
-
-public class Celeritas implements ClientModInitializer {
+/**
+ * Loader-neutral identity of the mod. Ionium keeps Celeritas' mod id and packages so upstream changes merge
+ * cleanly, and only changes what players see.
+ */
+public class Celeritas {
     public static final String MODID = "celeritas";
-    public static String VERSION;
-
-    @Override
-    public void onInitializeClient() {
-        VERSION = FabricLoader.getInstance().getModContainer(MODID).orElseThrow().getMetadata().getVersion().toString();
-    }
+    /** Shown on the F3 screen. */
+    public static final String NAME = "Ionium";
+    /** Set by the Fabric entrypoint; on Forge it comes from the jar manifest. */
+    public static String VERSION = String.valueOf(Celeritas.class.getPackage().getImplementationVersion());
 }

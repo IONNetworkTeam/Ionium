@@ -1,14 +1,17 @@
 package org.taumc.celeritas.mixin;
 
-import net.fabricmc.loader.api.FabricLoader;
 import org.embeddedt.embeddium.impl.util.MixinClassValidator;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
-import org.taumc.celeritas.impl.Celeritas;
+import org.taumc.celeritas.impl.fabric.FabricMixinPath;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.FileSystems;
+import java.util.Map;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -37,24 +40,43 @@ public class CeleritasPrimitiveMixinPlugin implements IMixinConfigPlugin {
 
     }
 
+    /** True when running on Forge (Ionium's Forge 1.8.9 build) rather than Fabric/Ornithe. */
+    private static final boolean FORGE = CeleritasPrimitiveMixinPlugin.class.getClassLoader()
+            .getResource("net/minecraftforge/fml/relauncher/IFMLLoadingPlugin.class") != null;
+
+    /**
+     * Mixins left out on Forge 1.8.9. MinecraftMixin only carries Beta 1.7.3 window fixes and targets LWJGL2's
+     * Display, which the LWJGL3 layer renames. ChunkCacheMixin reports the server world's chunks, which only
+     * pre-1.3 versions render from; Forge also moved its target call into the async chunk loader.
+     */
+    private static final Set<String> FORGE_EXCLUDED = Set.of("core.MinecraftMixin", "core.ChunkCacheMixin");
+
     private Path getMixinPath() {
         String path = "org/taumc/celeritas/mixin";
-        var pathOpt = FabricLoader.getInstance().getModContainer(Celeritas.MODID).orElseThrow().findPath("org/taumc/celeritas/mixin");
-        if(pathOpt.isPresent()) {
-            return pathOpt.get();
-        } else {
-            try {
-                var resource = CeleritasPrimitiveMixinPlugin.class.getResource("/" + path);
-                if (resource == null) {
-                    return null;
-                }
-                Path clPath = Path.of(resource.toURI());
-                if(Files.exists(clPath)) {
-                    return clPath;
-                }
-            } catch(URISyntaxException ignored) {
+        if (!FORGE) {
+            var pathOpt = FabricMixinPath.find(path);
+            if (pathOpt.isPresent()) {
+                return pathOpt.get();
             }
-            return null;
+        }
+        try {
+            var resource = CeleritasPrimitiveMixinPlugin.class.getResource("/" + path);
+            if (resource == null) {
+                return null;
+            }
+            URI uri = resource.toURI();
+            if ("jar".equals(uri.getScheme())) {
+                // Forge: the classes sit in a plain jar, so open it as a zip file system to list them
+                try {
+                    FileSystems.getFileSystem(uri);
+                } catch (FileSystemNotFoundException e) {
+                    FileSystems.newFileSystem(uri, Map.of());
+                }
+            }
+            Path clPath = Path.of(uri);
+            return Files.exists(clPath) ? clPath : null;
+        } catch (URISyntaxException | IOException e) {
+            throw new IllegalStateException("Cannot locate the mixin package", e);
         }
     }
 
@@ -78,6 +100,7 @@ public class CeleritasPrimitiveMixinPlugin implements IMixinConfigPlugin {
                     .map(Path::toAbsolutePath)
                     .filter(MixinClassValidator::isMixinClass)
                     .map(path -> mixinClassify(rootPath, path))
+                    .filter(name -> !(FORGE && FORGE_EXCLUDED.contains(name)))
                     .forEach(possibleMixinClasses::add);
         } catch(IOException e) {
             System.err.println("Error reading path");
