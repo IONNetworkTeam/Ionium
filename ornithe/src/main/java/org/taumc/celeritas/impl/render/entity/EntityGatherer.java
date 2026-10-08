@@ -12,21 +12,45 @@ import org.taumc.celeritas.mixin.core.WorldChunkAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import org.taumc.celeritas.impl.compat.ForgeCompat;
 
 public class EntityGatherer {
-    private final List<Entity> entityList;
+    /^* Forge draws entities in two passes (see {@link ForgeCompat#getRenderPass()}); vanilla only has pass 0. ^/
+    public static final int NUM_PASSES = 2;
+
+    private final List<Entity>[] entityLists;
     private final Consumer<Entity> addEntity;
 
+    @SuppressWarnings("unchecked")
     public EntityGatherer() {
-        this.entityList = new ArrayList<>();
-        this.addEntity = this.entityList::add;
+        this.entityLists = new List[NUM_PASSES];
+        for (int i = 0; i < NUM_PASSES; i++) {
+            this.entityLists[i] = new ArrayList<>();
+        }
+        var entityLists = this.entityLists;
+        if (ForgeCompat.PRESENT) {
+            this.addEntity = entity -> {
+                for (int i = 0; i < NUM_PASSES; i++) {
+                    if (ForgeCompat.shouldRenderInPass(entity, i)) {
+                        entityLists[i].add(entity);
+                    }
+                }
+            };
+        } else {
+            this.addEntity = entityLists[0]::add;
+        }
     }
 
     public void clear() {
-        this.entityList.clear();
+        for (int i = 0; i < NUM_PASSES; i++) {
+            this.entityLists[i].clear();
+        }
     }
 
-    public List<Entity> getLoadedEntityList(ClientWorld world) {
+    /^*
+     * @return the loaded entities, split by the render pass they draw in
+     ^/
+    public List<Entity>[] getLoadedEntityLists(ClientWorld world) {
         Consumer<Entity> addEntity = this.addEntity;
         // Iterate directly over chunk entity lists where possible - mods may create multipart entities that are not
         // added to the main loadedEntityList.
@@ -45,7 +69,7 @@ public class EntityGatherer {
             // Best we can do is the loaded entity list - this will miss some multipart entities
             world.entities.forEach(addEntity);
         }
-        return this.entityList;
+        return this.entityLists;
     }
 }
 

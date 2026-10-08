@@ -20,6 +20,8 @@ import org.embeddedt.embeddium.impl.util.task.CancellationToken;
 import org.joml.Vector3d;
 import org.joml.Vector3i;
 import org.lwjgl.opengl.GL11C;
+//? if >=1.8
+//import org.taumc.celeritas.impl.compat.ForgeCompat;
 import org.taumc.celeritas.impl.extensions.TessellatorExtension;
 import org.taumc.celeritas.impl.render.terrain.compile.PrimitiveBuiltRenderSectionData;
 import org.taumc.celeritas.impl.render.terrain.compile.PrimitiveChunkBuildContext;
@@ -119,8 +121,10 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
 
                         //? if <1.2.5 {
                         //boolean hasBlockEntity = Block.HAS_BLOCK_ENTITY[blockId];
-                        //?} else
+                        //?} else if <1.8 {
                         boolean hasBlockEntity = block.hasBlockEntity();
+                        //?} else
+                        //boolean hasBlockEntity = ForgeCompat.hasBlockEntity(block, blockState);
 
                         if (hasBlockEntity) {
                             //? if <1.8 {
@@ -132,19 +136,25 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                             }
                         }
 
-                        var pass = block.getRenderLayer();
-
                         //? if <1.8 {
+                        var pass = block.getRenderLayer();
                         tesselator.start();
                         renderBlocks.tessellateBlock(block, x, y, z);
                         buildContext.copyRawBuffer(IntBuffer.wrap(extTesselator.celeritas$getRawBuffer()), extTesselator.celeritas$getVertexCount(), buffers, buffers.getRenderPassConfiguration().getMaterialForRenderType(pass));
                         extTesselator.celeritas$reset();
                         //?} else {
-                        /*tesselator.begin(GL11C.GL_QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK);
-                        renderBlocks.tessellate(blockState, blockPos, region, tesselator);
-                        tesselator.end();
-                        buildContext.copyRawBuffer(tesselator.getBuffer().asIntBuffer(), tesselator.getVertexCount(), buffers, buffers.getRenderPassConfiguration().getMaterialForRenderType(pass));
-                        tesselator.clear();
+                        /*// Forge lets a block draw into several layers and tells its model which one is being built
+                        for (var pass : ForgeCompat.LAYERS) {
+                            if (!ForgeCompat.canRenderInLayer(block, pass)) {
+                                continue;
+                            }
+                            ForgeCompat.setRenderLayer(pass);
+                            tesselator.begin(GL11C.GL_QUADS, com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK);
+                            renderBlocks.tessellate(blockState, blockPos, region, tesselator);
+                            tesselator.end();
+                            buildContext.copyRawBuffer(tesselator.getBuffer().asIntBuffer(), tesselator.getVertexCount(), buffers, buffers.getRenderPassConfiguration().getMaterialForRenderType(pass));
+                            tesselator.clear();
+                        }
                         *///?}
 
                         //? if <1.7 {
@@ -162,6 +172,8 @@ public class ChunkBuilderMeshingTask extends ChunkBuilderTask<ChunkBuildOutput> 
                 }
             }
         } finally {
+            //? if >=1.8
+            //ForgeCompat.setRenderLayer(null);
             tesselator.offset(0, 0, 0);
             //? if <1.7
             TessellatorAccessor.celeritas$setTriangleMode(true);

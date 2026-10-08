@@ -14,7 +14,9 @@ import net.minecraft.client.render.block.BlockLayer;
 import net.minecraft.entity.projectile.WitherSkullEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import org.taumc.celeritas.impl.compat.ForgeCompat;
 import org.taumc.celeritas.impl.render.entity.EntityGatherer;
+import java.util.List;
 *///?}
 import net.minecraft.world.World;
 import org.embeddedt.embeddium.impl.gl.device.RenderDevice;
@@ -207,14 +209,21 @@ public abstract class WorldRendererMixin implements RenderGlobalExtension {
     //? if >=1.8 {
     /*private final EntityGatherer celeritas$entityGatherer = new EntityGatherer();
 
+    @Unique
+    private List<Entity>[] celeritas$collectedEntities;
+
     @Inject(method = "renderEntities", at = @At(value = "INVOKE_STRING", target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V", args = "ldc=entities"))
     private void celeritas$renderEntities(Entity camera, Culler culler, float tickDelta, CallbackInfo ci, @Local(ordinal = 0) double d, @Local(ordinal = 1) double e, @Local(ordinal = 2) double g) {
-        celeritas$entityGatherer.clear();
-        var entityList = celeritas$entityGatherer.getLoadedEntityList(this.world);
+        // Forge runs this method a second time per frame for pass 1, so gather once per frame and split by pass
+        int pass = ForgeCompat.getRenderPass();
+        if (pass == 0 || celeritas$collectedEntities == null) {
+            celeritas$entityGatherer.clear();
+            celeritas$collectedEntities = celeritas$entityGatherer.getLoadedEntityLists(this.world);
+        }
 
         BlockPos.Mutable entityBlockPos = new BlockPos.Mutable();
 
-        for (Entity entity : entityList) {
+        for (Entity entity : celeritas$collectedEntities[pass]) {
             if (!this.entityRenderDispatcher.shouldRender(entity, culler, d, e, g) && entity.rider != this.minecraft.player) {
                 if (entity instanceof WitherSkullEntity) {
                     this.minecraft.getEntityRenderDispatcher().renderNameTag(entity, tickDelta);

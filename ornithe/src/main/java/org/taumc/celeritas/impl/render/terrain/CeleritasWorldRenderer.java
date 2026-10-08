@@ -10,6 +10,8 @@ import org.embeddedt.embeddium.impl.render.chunk.ChunkRenderMatrices;
 import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkMeshFormats;
 import org.embeddedt.embeddium.impl.render.terrain.SimpleWorldRenderer;
 import org.taumc.celeritas.impl.render.terrain.fog.GLStateManagerFogService;
+//? if >=1.8
+//import org.taumc.celeritas.impl.compat.ForgeCompat;
 import org.taumc.celeritas.impl.extensions.RenderGlobalExtension;
 import org.taumc.celeritas.impl.render.terrain.matrix.PrimitiveChunkMatrixGetter;
 import org.taumc.celeritas.mixin.core.MinecraftAccessor;
@@ -118,7 +120,15 @@ public class CeleritasWorldRenderer extends SimpleWorldRenderer<World, Primitive
     @Override
     protected void renderBlockEntityList(List<BlockEntity> list, Float partialTicksBoxed) {
         float partialTicks = partialTicksBoxed;
+        //? if >=1.8
+        //int pass = ForgeCompat.getRenderPass();
         for (var blockEntity : list) {
+            //? if >=1.8 {
+            /*// Forge renders block entities in two passes per frame; draw each only in the pass it asked for
+            if (!ForgeCompat.shouldRenderInPass(blockEntity, pass)) {
+                continue;
+            }
+            *///?}
             try {
                 BlockEntityRenderDispatcher.INSTANCE.render(blockEntity, partialTicks /*? if >=1.8 {*//*, -1 *//*?}*/);
             } catch(RuntimeException e) {
