@@ -12,6 +12,8 @@ import org.embeddedt.embeddium.impl.render.terrain.SimpleWorldRenderer;
 import org.taumc.celeritas.impl.render.terrain.fog.GLStateManagerFogService;
 //? if >=1.8
 //import org.taumc.celeritas.impl.compat.ForgeCompat;
+//? if >=1.8
+//import org.embeddedt.embeddium.impl.render.viewport.Viewport;
 import org.taumc.celeritas.impl.extensions.RenderGlobalExtension;
 import org.taumc.celeritas.impl.render.terrain.matrix.PrimitiveChunkMatrixGetter;
 import org.taumc.celeritas.mixin.core.MinecraftAccessor;
@@ -107,9 +109,29 @@ public class CeleritasWorldRenderer extends SimpleWorldRenderer<World, Primitive
         return super.getChunksDebugString() + "S: " + this.renderSectionManager.getSectionsWithSkyLight().size();
     }
 
+    //? if >=1.8 {
+    /*// Both matrices stay the same from setupTerrain through the translucent layer, so they are read once per frame
+    // instead of once per layer. Each glGet makes Mesa sync with its GL thread.
+    private ChunkRenderMatrices frameMatrices;
+
+    @Override
+    public void setupTerrain(Viewport viewport, CameraState cameraState, int frame, boolean spectator,
+                             boolean updateChunksImmediately) {
+        this.frameMatrices = null;
+        super.setupTerrain(viewport, cameraState, frame, spectator, updateChunksImmediately);
+    }
+    *///?}
+
     @Override
     protected ChunkRenderMatrices createChunkRenderMatrices() {
+        //? if <1.8 {
         return PrimitiveChunkMatrixGetter.getMatrices();
+        //?} else {
+        /*if (this.frameMatrices == null) {
+            this.frameMatrices = PrimitiveChunkMatrixGetter.getMatrices();
+        }
+        return this.frameMatrices;
+        *///?}
     }
 
     @Override
