@@ -13,7 +13,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
 /^*
- * Calls the rendering hooks Forge patches into 1.8.9, for Ionium's Forge build. This code is compiled against vanilla
+ * Calls the rendering hooks Forge patches into 1.8.9, for the Ionium Forge build. This code is compiled against vanilla
  * (Ornithe), so the hooks are looked up at runtime. Forge-added members keep their real names at runtime, and the
  * class literals here are remapped to SRG along with the rest of the jar. On Ornithe every method falls back to what
  * vanilla does.
@@ -106,7 +106,7 @@ public final class ForgeCompat {
         }
     }
 
-    /^* Forge mods can give a block a tile entity depending on its state, without setting vanilla's flag. ^/
+    /^* Forge mods can give a block a tile entity depending on its state, without setting the vanilla flag. ^/
     public static boolean hasBlockEntity(Block block, BlockState state) {
         if (!PRESENT) {
             return block.hasBlockEntity();
