@@ -51,6 +51,9 @@ public class CeleritasPrimitiveMixinPlugin implements IMixinConfigPlugin {
      */
     private static final Set<String> FORGE_EXCLUDED = Set.of("core.MinecraftMixin", "core.ChunkCacheMixin");
 
+    /** Mixins in this package target Forge's own classes, so they only apply on Forge. */
+    private static final String FORGE_ONLY_PACKAGE = "forge.";
+
     private Path getMixinPath() {
         String path = "org/taumc/celeritas/mixin";
         if (!FORGE) {
@@ -101,6 +104,7 @@ public class CeleritasPrimitiveMixinPlugin implements IMixinConfigPlugin {
                     .filter(MixinClassValidator::isMixinClass)
                     .map(path -> mixinClassify(rootPath, path))
                     .filter(name -> !(FORGE && FORGE_EXCLUDED.contains(name)))
+                    .filter(name -> FORGE || !name.startsWith(FORGE_ONLY_PACKAGE))
                     .forEach(possibleMixinClasses::add);
         } catch(IOException e) {
             System.err.println("Error reading path");
