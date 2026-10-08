@@ -18,6 +18,14 @@ java {
 
 // The remapper (src/remapper) runs as a separate process, so its tiny-remapper never meets the one Loom brings.
 val remapper: SourceSet = sourceSets.create("remapper")
+// The jar's TweakClass (src/tweaker), built for Java 8 so it can still load on a stock Forge install and explain
+// what is missing before handing over to Mixin.
+val tweaker: SourceSet = sourceSets.create("tweaker")
+
+tasks.named<JavaCompile>(tweaker.compileJavaTaskName) {
+    options.release = 8
+    options.compilerArgs.add("-Xlint:-options")
+}
 
 evaluationDependsOn(":ornithe:1.8.9")
 
@@ -39,6 +47,10 @@ repositories {
         forRepository { maven("https://maven.fabricmc.net/") }
         filter { includeGroup("net.fabricmc") }
     }
+    exclusiveContent {
+        forRepository { maven("https://libraries.minecraft.net/") }
+        filter { includeModule("net.minecraft", "launchwrapper") }
+    }
     mavenCentral()
 }
 
@@ -53,6 +65,7 @@ dependencies {
     bundled("it.unimi.dsi:fastutil:8.5.15")
     "remapperImplementation"("net.fabricmc:mapping-io:0.7.1")
     "remapperImplementation"("net.fabricmc:tiny-remapper:0.10.2")
+    "tweakerCompileOnly"("net.minecraft:launchwrapper:1.12") { isTransitive = false }
 }
 
 val modVersion = (findProperty("ionium_version") ?: rootProject.version).toString()
@@ -101,6 +114,7 @@ val forgeJar = tasks.register<Jar>("forgeJar") {
     val archives = serviceOf<ArchiveOperations>()
     val remapped = remappedJar
     val fastutil: FileCollection = bundled
+    val tweakerClasses: FileCollection = tweaker.output
     archiveBaseName.set("ionium")
     archiveVersion.set(modVersion)
     archiveClassifier.set("forge-1.8.9")
@@ -115,6 +129,7 @@ val forgeJar = tasks.register<Jar>("forgeJar") {
         // fastutil's jar carries no license file; META-INF/licenses/fastutil-LICENSE-2.0.txt comes from resources
         include("it/**")
     }
+    from(tweakerClasses)
     val version = modVersion
     from("src/main/resources") {
         filesMatching("mcmod.info") { expand("version" to version) }
@@ -122,7 +137,8 @@ val forgeJar = tasks.register<Jar>("forgeJar") {
     inputs.property("version", modVersion)
     manifest {
         attributes(
-            "TweakClass" to "org.spongepowered.asm.launch.MixinTweaker",
+            // checks for Java 21, LWJGL3 and Mixin, then cascades to org.spongepowered.asm.launch.MixinTweaker
+            "TweakClass" to "org.taumc.ionium.launch.IoniumTweaker",
             "TweakOrder" to "0",
             "MixinConfigs" to "mixins.celeritas.json",
             "ForceLoadAsMod" to "true",

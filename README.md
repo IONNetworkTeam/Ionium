@@ -30,7 +30,8 @@ so you need:
 - LWJGL 3 from the launcher, plus the LWJGL 2 compatibility layer that ships with
   [ION Client](https://github.com/Juli0q/IONClientMod)
 
-We'll put out a ready-made Prism Launcher instance that has all of this set up.
+The [ION Launcher](https://launcher.ion-network.de) sets all of this up for you. If something is missing,
+Ionium shows a message saying what's wrong when the game starts and then closes the game.
 
 ## Building
 
